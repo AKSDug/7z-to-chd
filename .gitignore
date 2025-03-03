@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Tools directory
+tools/
+!tools/.gitkeep
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary directories and files
+temp/
+tmp/
+*.tmp
+*.bak
+# VS Code files
+.vs/
+*.vsidx
