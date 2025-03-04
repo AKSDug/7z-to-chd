@@ -1,56 +1,48 @@
-# Python
+# Create or edit .gitignore file
+cat > .gitignore << EOL
+# Visual Studio files
+.vs/
+*.vsidx
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio cache
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Python specific
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
 var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
-
-# Tools directory
-tools/
-!tools/.gitkeep
-
-# Virtual Environment
-venv/
-env/
-ENV/
-.env
-
-# PyCharm
-.idea/
-
-# VS Code
-.vscode/
-
-# Operating System Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Temporary directories and files
-temp/
-tmp/
-*.tmp
-*.bak
-# VS Code files
-.vs/
-*.vsidx
+EOL
