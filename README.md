@@ -1,73 +1,158 @@
-# 7z to CHD Conversion Tool
+﻿# 7z-to-CHD Converter
 
-A cross-platform utility for batch converting .7z archives containing disk images to CHD format, with special handling for multi-disk games.
+A cross-platform utility for bulk extraction of .7z archives and conversion to CHD format, with automatic handling for multi-disk games.
+
+This tool was created out of frustration with existing conversion utilities that either imposed overly strict requirements or lacked efficient batch processing capabilities. Our goal was to develop a powerful yet simple solution that eliminates common pain points in the ROM conversion workflow.
+
+## Overview
+
+7z-to-CHD Converter handles the complex process of extracting and converting disk images while presenting a straightforward interface to the user. Although primarily tested with Dreamcast games, the tool follows best practices for maximum compatibility and should work seamlessly with other console formats that support CHD conversion.
 
 ## Features
 
-- **Batch processing** of .7z archives to CHD format
-- **Multi-disk game support** with automatic .m3u playlist creation
-- **Cross-platform compatibility** (Windows, Linux, macOS)
-- **Self-contained operation** with automatic dependency installation
-- **Flexible disk image support** (ISO, BIN/CUE, GDI, IMG, etc.)
-- **Smart game detection** to properly group related disks
-- **Original file management** with options to keep or delete source files
+- Extracts files from .7z archives with smart resource management
+- Converts disc image formats (ISO, BIN/CUE, GDI, NRG, etc.) to CHD
+- Creates .m3u playlists for multi-disk games automatically
+- Implements efficient resume functionality to avoid redundant processing
+- Cross-platform (Windows, macOS, Linux)
+- Multithreading support with adaptive resource allocation
+- Detailed logging for troubleshooting
+
+## Repository Structure
+
+```
+7z-to-chd/
+├── README.md
+├── setup.py          # Sets up dependencies and tools
+├── convert.py        # Main conversion script
+├── requirements.txt  # Python dependencies
+└── lib/              # Core functionality modules
+    ├── __init__.py
+    ├── extractor.py  # 7z extraction handling
+    ├── converter.py  # CHD conversion
+    ├── playlist.py   # Multi-disk game detection/playlist creation
+    └── utils.py      # Common utility functions
+```
 
 ## Requirements
 
-- Python 3.6 or higher
-- Internet connection (for initial dependency installation)
-
-The script will automatically install all other required dependencies:
-- py7zr (for .7z extraction)
-- CHDMan (downloaded automatically if needed)
+- Python 3.7 or higher
+- chdman utility (part of the MAME distribution)
+- Internet connection (for initial setup)
 
 ## Installation
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/AKSDug/7z-to-chd.git
-   cd 7z-to-chd
-   ```
+Run the setup script to install all dependencies:
 
-2. Ensure Python 3.6+ is installed on your system
+```bash
+# Windows
+python setup.py
+
+# macOS/Linux
+python3 setup.py
+```
+
+The setup script will:
+1. Install required Python packages (py7zr, tqdm, colorama, psutil)
+2. Attempt to locate or set up the chdman tool in the following order:
+   - Check if chdman is already installed in the tools directory
+   - Check if chdman is available in the system PATH
+   - Search common installation locations for MAME and chdman
+   - Prompt you to provide the path to chdman if not found automatically
+
+### About chdman
+
+The chdman utility is a tool distributed with MAME (Multiple Arcade Machine Emulator) that handles CHD (Compressed Hunks of Data) files. If you already have MAME installed, the setup script will attempt to find chdman automatically.
+
+If chdman isn't found automatically, you'll be prompted to provide its location. Common locations include:
+
+- Windows: `C:\Program Files\MAME\chdman.exe`
+- macOS: `/Applications/MAME.app/Contents/MacOS/chdman`
+- Linux: `/usr/bin/chdman` or `/usr/local/bin/chdman`
+
+You can download MAME from the [official MAME website](https://www.mamedev.org/release.html) or the [MAME GitHub repository](https://github.com/mamedev/mame/releases).
+
+**Important:** The tool will use chdman directly from its installation location rather than making a copy. This prevents permission issues and ensures you're always using the correct version.
 
 ## Usage
 
-1. Run the main script:
-   ```
-   python 7z_to_chd.py
-   ```
+Run the conversion script:
 
-2. Follow the prompts:
-   - Enter path to folder containing .7z files
-   - Enter path for output CHD and .m3u files
-   - Choose whether to keep or delete original .7z files
+```bash
+# Windows
+python convert.py
 
-## How It Works
+# macOS/Linux
+python3 convert.py
+```
 
-1. The script scans the specified directory for .7z archives
-2. It groups files that appear to be part of multi-disk sets
-3. Each archive is extracted to a temporary directory
-4. Disk images are located within the extracted content
-5. CHDMan is used to convert the disk images to CHD format
-6. For multi-disk games, .m3u playlists are created
-7. Original .7z archives are kept or deleted based on user preference
+The script will prompt you for:
+1. Source directory (containing .7z files)
+2. Destination directory (for CHD and .m3u files)
+3. Whether to keep or delete original files
+4. Multithreading limitations
 
-## File Naming Conventions
+If chdman wasn't found during setup, you'll be prompted to provide its path the first time you run a conversion.
 
-The script can recognize various naming patterns for multi-disk games:
+### Command-line Arguments
 
-- Game Name Disc 1.7z, Game Name Disc 2.7z
-- Game Name Disk 1.7z, Game Name Disk 2.7z
-- Game Name CD 1.7z, Game Name CD 2.7z
-- Game Name (Disc 1).7z, Game Name (Disc 2).7z
-- Game Name (Disk 1).7z, Game Name (Disk 2).7z
-- Game Name (CD 1).7z, Game Name (CD 2).7z
+You can also specify arguments directly:
 
-## Support and Contributions
+```bash
+python convert.py --source "/path/to/7z/files" --destination "/path/to/output" --keep yes --threads 4
+```
 
-Issues and pull requests are welcome! Please feel free to contribute to this project.
+Available options:
+- `--source`, `-s`: Source directory containing .7z files
+- `--destination`, `-d`: Destination directory for CHD and .m3u files
+- `--keep`, `-k`: Keep original files after conversion (yes/no)
+- `--threads`, `-t`: Maximum number of concurrent operations (0 for CPU count)
+- `--verbose`, `-v`: Enable verbose logging
+
+## Logging
+
+Detailed logs are stored in the `logs` directory. Each run creates a timestamped log file for troubleshooting purposes.
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check the logs in the `logs` directory
+2. Ensure all dependencies were correctly installed
+3. Verify that source files are valid .7z archives
+4. Make sure chdman is properly installed and configured:
+   - If you get errors about chdman not being found, run the setup script again or manually provide the path when prompted
+   - If you know where chdman is installed, you can create a file named `chdman_path.txt` in the project root containing the full path to chdman
+
+### Common Issues
+
+- **Error Code 3221225786**: This is a Windows-specific error often related to memory issues or file access problems. Try:
+  - Using a smaller number of worker threads (e.g., 2 instead of 4)
+  - Ensuring you have sufficient disk space
+  - Running the script with administrator privileges
+  
+- **"nan% complete" messages**: These may appear during conversion but usually don't indicate a problem unless the conversion fails. This is a display issue from chdman.
+
+- **Individual track files**: The tool might create multiple small CHD files for multi-track games. This is unlikely with .cue files used for proper multi-track handling.
+
+## Compatibility
+
+While primarily tested with Dreamcast games, this tool should work with disc images from any console system that chdman supports, including:
+
+- PlayStation/PS2
+- Sega CD/Saturn/Dreamcast
+- PC Engine CD/TurboGrafx-CD
+- 3DO
+- PC-FX
+- Neo Geo CD
+- Other CD-based systems
+
+The tool detects and handles various disc image formats including ISO, BIN/CUE, GDI, NRG, CDI, and more.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT
+
+## Author
+
+Created by AKSDug
