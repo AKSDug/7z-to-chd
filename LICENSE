@@ -19,3 +19,32 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---------------------------------------------------------------------------
+
+This project utilizes the following open-source components, each under its own license:
+
+1. chdman utility - Part of the MAME project
+   Copyright © The MAME Team
+   License: GPL-2.0 and BSD-3-Clause
+   Source: https://github.com/mamedev/mame
+
+2. py7zr - Python library for 7z archive handling
+   Copyright © 2019-2023, Hiroshi Miura
+   License: LGPL-2.1
+   Source: https://github.com/miurahr/py7zr
+
+3. tqdm - Fast, Extensible Progress Bar for Python and CLI
+   Copyright © 2015-2023, Casper da Costa-Luis, Google LLC, et al.
+   License: MIT and MPL-2.0
+   Source: https://github.com/tqdm/tqdm
+
+4. colorama - Cross-platform colored terminal text
+   Copyright © 2010-2023, Jonathan Hartley
+   License: BSD-3-Clause
+   Source: https://github.com/tartley/colorama
+
+5. psutil - Cross-platform lib for process and system monitoring
+   Copyright © 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola
+   License: BSD-3-Clause
+   Source: https://github.com/giampaolo/psutil

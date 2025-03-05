@@ -44,9 +44,12 @@ class Extractor:
         self.output_dir = Path(output_dir) if output_dir else None
         self.extraction_queue = []
         
-        # Track processed games for M3U creation
+        # Track processed games for M3U creation (legacy tracking, can be replaced by PlaylistManager)
         self.processed_games = {}
         self.completed_game_series = set()
+        
+        # Reference to the playlist manager (will be set later)
+        self.playlist_manager = None
         
         # Create temp directory if it doesn't exist
         os.makedirs(self.temp_dir, exist_ok=True)
@@ -62,6 +65,16 @@ class Extractor:
         """
         self.output_dir = Path(output_dir)
         logger.debug(f"Output directory set to {self.output_dir}")
+        
+    def set_playlist_manager(self, playlist_manager):
+        """
+        Set reference to the PlaylistManager object.
+        
+        Args:
+            playlist_manager: The PlaylistManager object.
+        """
+        self.playlist_manager = playlist_manager
+        logger.debug("PlaylistManager set for Extractor")
     
     def _extract_game_info(self, filename):
         """
@@ -73,6 +86,11 @@ class Extractor:
         Returns:
             tuple: (base_name, disc_number) or (filename, None) if no disc pattern found.
         """
+        # If we have a PlaylistManager, use its extraction method for consistency
+        if self.playlist_manager:
+            return self.playlist_manager._extract_base_name_and_disc(filename)
+            
+        # Legacy implementation
         # Common disc identifier patterns
         disc_patterns = [
             r'(?i)[\[(]?disc\s*(\d+)[\])]?',            # (Disc 1), [Disc 2], Disc 3
@@ -147,11 +165,16 @@ class Extractor:
                     logger.info(f"Archive {archive_path.name} can be skipped - CHD already exists: {chd_path.name}")
                     analysis['can_skip'] = True
                     
-                    # Track this game for M3U creation
-                    if base_game not in self.processed_games:
-                        self.processed_games[base_game] = []
-                    if disc_number not in self.processed_games[base_game]:
-                        self.processed_games[base_game].append(disc_number)
+                    # Register with PlaylistManager if available
+                    if self.playlist_manager:
+                        # Register the disc but don't update playlists yet - we'll do that in batch after all processing
+                        self.playlist_manager.register_disc(chd_path, update_playlists=False)
+                    # Legacy tracking
+                    else:
+                        if base_game not in self.processed_games:
+                            self.processed_games[base_game] = []
+                        if disc_number not in self.processed_games[base_game]:
+                            self.processed_games[base_game].append(disc_number)
                     
                     return analysis
             else:
@@ -218,8 +241,15 @@ class Extractor:
                 if can_skip:
                     logger.info(f"Archive {archive_path.name} can be skipped - all CHDs already exist")
                     
-                    # Track this game for M3U creation
-                    if base_game and disc_number:
+                    # Register with PlaylistManager if available
+                    if self.playlist_manager and base_game and disc_number:
+                        # Locate the CHD file and register it without updating playlists yet
+                        chd_pattern = f"{archive_path.stem}.chd"
+                        chd_path = self.output_dir / chd_pattern
+                        if chd_path.exists():
+                            self.playlist_manager.register_disc(chd_path, update_playlists=False)
+                    # Legacy tracking
+                    elif base_game and disc_number:
                         if base_game not in self.processed_games:
                             self.processed_games[base_game] = []
                         if disc_number not in self.processed_games[base_game]:
@@ -608,13 +638,17 @@ class Extractor:
                         if chd_path.exists():
                             logger.debug(f"Skipping already converted file: {file_path}")
                             
-                            # Track for M3U creation
-                            base_game, disc_num = self._extract_game_info(file_path.stem)
-                            if base_game and disc_num:
-                                if base_game not in self.processed_games:
-                                    self.processed_games[base_game] = []
-                                if disc_num not in self.processed_games[base_game]:
-                                    self.processed_games[base_game].append(disc_num)
+                            # Register with PlaylistManager if available
+                            if self.playlist_manager:
+                                self.playlist_manager.register_disc(chd_path, update_playlists=False)
+                            # Legacy tracking
+                            else:
+                                base_game, disc_num = self._extract_game_info(file_path.stem)
+                                if base_game and disc_num:
+                                    if base_game not in self.processed_games:
+                                        self.processed_games[base_game] = []
+                                    if disc_num not in self.processed_games[base_game]:
+                                        self.processed_games[base_game].append(disc_num)
                             
                             continue
                     
@@ -636,13 +670,20 @@ class Extractor:
             for cue_file in cues:
                 convertible_files.append((cue_file, 'cue'))
                 
-                # Track for M3U creation
+                # Register with PlaylistManager if available
                 base_game, disc_num = self._extract_game_info(cue_file.stem)
                 if base_game and disc_num:
-                    if base_game not in self.processed_games:
-                        self.processed_games[base_game] = []
-                    if disc_num not in self.processed_games[base_game]:
-                        self.processed_games[base_game].append(disc_num)
+                    # We can't register the CHD yet as it doesn't exist, but we can track 
+                    # the information for legacy compatibility
+                    if self.playlist_manager:
+                        # Will be handled during conversion
+                        pass
+                    # Legacy tracking
+                    else:
+                        if base_game not in self.processed_games:
+                            self.processed_games[base_game] = []
+                        if disc_num not in self.processed_games[base_game]:
+                            self.processed_games[base_game].append(disc_num)
                 
                 logger.debug(f"Found cue file: {cue_file}")
             
@@ -663,10 +704,17 @@ class Extractor:
             # Track for M3U creation
             base_game, disc_num = self._extract_game_info(bin_file.stem)
             if base_game and disc_num:
-                if base_game not in self.processed_games:
-                    self.processed_games[base_game] = []
-                if disc_num not in self.processed_games[base_game]:
-                    self.processed_games[base_game].append(disc_num)
+                # We can't register the CHD yet as it doesn't exist, but we can track 
+                # the information for legacy compatibility
+                if self.playlist_manager:
+                    # Will be handled during conversion
+                    pass
+                # Legacy tracking
+                else:
+                    if base_game not in self.processed_games:
+                        self.processed_games[base_game] = []
+                    if disc_num not in self.processed_games[base_game]:
+                        self.processed_games[base_game].append(disc_num)
                     
             logger.debug(f"Found bin file (not covered by cue): {bin_file}")
         
@@ -677,10 +725,17 @@ class Extractor:
             # Track for M3U creation
             base_game, disc_num = self._extract_game_info(file_path.stem)
             if base_game and disc_num:
-                if base_game not in self.processed_games:
-                    self.processed_games[base_game] = []
-                if disc_num not in self.processed_games[base_game]:
-                    self.processed_games[base_game].append(disc_num)
+                # We can't register the CHD yet as it doesn't exist, but we can track 
+                # the information for legacy compatibility
+                if self.playlist_manager:
+                    # Will be handled during conversion
+                    pass
+                # Legacy tracking
+                else:
+                    if base_game not in self.processed_games:
+                        self.processed_games[base_game] = []
+                    if disc_num not in self.processed_games[base_game]:
+                        self.processed_games[base_game].append(disc_num)
         
         logger.info(f"Found {len(convertible_files)} convertible files in {directory}")
         return convertible_files
@@ -724,14 +779,26 @@ class Extractor:
         """
         processed_count = 0
         
+        # If using PlaylistManager, let it handle the playlist creation
+        if self.playlist_manager and self.output_dir:
+            # We need to check each series for completeness and update playlists if needed
+            # This is now handled in batch during final processing
+            return 0
+            
+        # Legacy implementation
         # Check all game series to see if any are complete
         processed_games = self.get_processed_games()
         for base_game, disc_numbers in processed_games.items():
             # Check if this is a multi-disc series that hasn't been processed yet
             if len(disc_numbers) >= 2 and base_game not in self.completed_game_series:
-                # Mark as ready for M3U creation
-                self._check_and_notify_series_completion(base_game, disc_numbers)
-                processed_count += 1
+                # Check if we have all expected discs
+                max_disc = max(disc_numbers)
+                is_complete = all(i in disc_numbers for i in range(1, max_disc + 1))
+                
+                # Only create a playlist if we have a complete series or just processed the highest disc
+                if is_complete:
+                    self._check_and_notify_series_completion(base_game, disc_numbers)
+                    processed_count += 1
                 
         return processed_count
     
@@ -747,6 +814,20 @@ class Extractor:
         if len(disc_numbers) >= 2 and base_game not in self.completed_game_series:
             logger.info(f"Detected complete game series: {base_game} with discs {sorted(disc_numbers)}")
             
+            # If using PlaylistManager, let it handle playlist creation
+            if self.playlist_manager and self.output_dir:
+                # Check if the series is complete before updating
+                max_disc = max(disc_numbers)
+                is_complete = all(i in disc_numbers for i in range(1, max_disc + 1))
+                
+                # Only update the playlist if the series is complete or we just processed the highest disc
+                highest_disc_processed = max(disc_numbers)
+                if is_complete or highest_disc_processed == max_disc:
+                    self.playlist_manager.update_playlist(base_game)
+                    self.completed_game_series.add(base_game)
+                return
+                
+            # Legacy implementation
             # Mark as completed
             self.completed_game_series.add(base_game)
             

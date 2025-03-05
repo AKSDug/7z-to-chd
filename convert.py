@@ -27,13 +27,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Import local modules
 from lib.extractor import Extractor
 from lib.converter import Converter
-from lib.playlist import PlaylistGenerator
+from lib.playlist import PlaylistManager
 from lib.utils import setup_logging, Timer, confirm_path
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description='Batch convert .7z archives to CHD format with multi-disk support',
+        description='Batch convert .7z archives to CHD format with multi-disc support',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -42,13 +42,15 @@ def parse_args():
     parser.add_argument('--keep', '-k', choices=['yes', 'no'], help='Keep original files after conversion')
     parser.add_argument('--threads', '-t', type=int, help='Maximum number of concurrent operations (0 for CPU count)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+    parser.add_argument('--state-file', help='Path to playlist state file (for resuming interrupted conversions)')
+    parser.add_argument('--skip-playlist-scan', action='store_true', help='Skip initial scan for existing playlists')
     
     return parser.parse_args()
 
 def prompt_user_input(args):
     """Prompt the user for input if not provided as arguments."""
     print(f"{colorama.Fore.CYAN}7z-to-CHD Converter{colorama.Style.RESET_ALL}")
-    print("Batch conversion of .7z archives to CHD format with multi-disk support")
+    print("Batch conversion of .7z archives to CHD format with multi-disc support")
     print()
     
     # Source directory
@@ -109,7 +111,13 @@ def prompt_user_input(args):
     print(f"{colorama.Fore.GREEN}✓ Maximum worker threads: {max_workers}{colorama.Style.RESET_ALL}")
     print()
     
-    return source_dir, dest_dir, keep_files, max_workers
+    # State file for persistent playlist state
+    state_file = args.state_file
+    
+    # Skip playlist scan option
+    skip_playlist_scan = args.skip_playlist_scan
+    
+    return source_dir, dest_dir, keep_files, max_workers, state_file, skip_playlist_scan
 
 def find_7z_files(source_dir):
     """Find all .7z files in the source directory."""
@@ -121,19 +129,27 @@ def find_7z_files(source_dir):
     
     return files
 
-def batch_process(source_dir, dest_dir, keep_files, max_workers, temp_dir=None):
+def batch_process(source_dir, dest_dir, keep_files, max_workers, state_file=None, skip_playlist_scan=False, temp_dir=None):
     """Process all .7z files in the source directory."""
     logger = logging.getLogger('main')
     timer = Timer().start()
     
+    # Initialize PlaylistManager with state file
+    playlist_manager = PlaylistManager(output_dir=dest_dir, state_file=state_file)
+    
     # Initialize components with cross-references
     extractor = Extractor(temp_dir=temp_dir, max_workers=max_workers, output_dir=dest_dir)
-    playlist_generator = PlaylistGenerator(output_dir=dest_dir)
     converter = Converter(max_workers=max_workers)
     
-    # Connect components for optimal M3U creation
+    # Connect components for optimal coordination
+    extractor.set_playlist_manager(playlist_manager)
     converter.set_extractor(extractor)
-    converter.set_playlist_generator(playlist_generator)
+    converter.set_playlist_manager(playlist_manager)
+    
+    # Perform an initial scan for existing playlists if not skipped
+    if not skip_playlist_scan:
+        print(f"{colorama.Fore.YELLOW}Scanning for existing multi-disc games...{colorama.Style.RESET_ALL}")
+        playlist_manager.scan_directory(update_all=False)
     
     # Find .7z files
     archive_files = find_7z_files(source_dir)
@@ -180,16 +196,11 @@ def batch_process(source_dir, dest_dir, keep_files, max_workers, temp_dir=None):
             if chd_path.exists():
                 logger.info(f"Skipping {archive_name} - CHD already exists: {chd_name}")
                 
-                # Track for M3U creation if it's part of a multi-disc series
+                # Register with PlaylistManager
                 if base_game and disc_num:
-                    if base_game not in extractor.processed_games:
-                        extractor.processed_games[base_game] = []
-                    if disc_num not in extractor.processed_games[base_game]:
-                        extractor.processed_games[base_game].append(disc_num)
-                        
-                    # Check if this completes a series for M3U creation
-                    if len(extractor.processed_games[base_game]) >= 2:
-                        extractor._check_and_notify_series_completion(base_game, extractor.processed_games[base_game])
+                    # Register the disc without forcing a full directory scan
+                    # This keeps track of the disc but doesn't update playlists yet
+                    playlist_manager.register_disc(chd_path, update_playlists=False)
                 
                 continue
             
@@ -210,12 +221,19 @@ def batch_process(source_dir, dest_dir, keep_files, max_workers, temp_dir=None):
             
             # Convert files
             conversion_result = converter.convert_multiple(convertible_files, dest_dir)
+            
+            # Ensure conversion_result is not None before trying to use it
+            if conversion_result is None:
+                conversion_result = {}
+                
             conversion_results[archive_path] = conversion_result
             
             # Collect successful CHD conversions
-            for input_file, (output_file, success) in conversion_result.items():
-                if success and output_file:
-                    converted_chd_files.append(output_file)
+            for input_file, result_tuple in conversion_result.items():
+                if result_tuple is not None:  # Make sure the tuple exists
+                    output_file, success = result_tuple
+                    if success and output_file:
+                        converted_chd_files.append(output_file)
             
             # Clean up extracted files
             if extract_dir and extract_dir.exists():
@@ -233,31 +251,45 @@ def batch_process(source_dir, dest_dir, keep_files, max_workers, temp_dir=None):
     # Create M3U playlists for multi-disc games
     print(f"{colorama.Fore.YELLOW}Creating playlists for multi-disc games...{colorama.Style.RESET_ALL}")
     
-    # Scan output directory to find any multi-disc games that need M3U files
-    playlist_count = playlist_generator.scan_output_directory()
+    # Scan for any newly added discs and create playlists
+    # Force the update to regenerate all playlists for completeness
+    playlist_count = len(playlist_manager.scan_directory(update_all=True))
     
-    # Check for any incomplete series that might benefit from an M3U
-    incomplete_playlist_count = playlist_generator.check_for_incomplete_series()
+    # Make sure we check for any incomplete series too, with a full scan
+    incomplete_playlist_count = len(playlist_manager.check_for_incomplete_series(force_scan=True))
     
     # Clean up
     print(f"{colorama.Fore.YELLOW}Cleaning up...{colorama.Style.RESET_ALL}")
     extractor.cleanup()
     converter.cleanup()
+    playlist_manager.cleanup()  # This saves the state before cleanup
     
     # Gather statistics
     timer.stop()
     
     total_archives = len(archive_files)
     processed_archives = sum(1 for results in conversion_results.values() if results)
-    converted_files = sum(1 for results in conversion_results.values() 
-                         for _, success in results.values() if success)
+    converted_files = 0
+    for results in conversion_results.values():
+        for _, result_tuple in results.items():
+            if result_tuple and result_tuple[1]:  # Check if conversion was successful
+                converted_files += 1
+                
     created_playlists = playlist_count + incomplete_playlist_count
+    
+    # Get series status information for reporting
+    series_status = playlist_manager.get_series_status()
+    complete_series = sum(1 for info in series_status.values() if info['is_complete'])
+    incomplete_series = sum(1 for info in series_status.values() 
+                           if not info['is_complete'] and info['disc_count'] > 1)
     
     return {
         'archives_found': total_archives,
         'archives_processed': processed_archives,
         'files_converted': converted_files,
         'playlists_created': created_playlists,
+        'complete_series': complete_series,
+        'incomplete_series': incomplete_series,
         'elapsed_time': timer.elapsed()
     }
 
@@ -280,6 +312,12 @@ def display_summary(statistics):
     print(f"Archives processed:  {statistics['archives_processed']} ({archives_success_rate:.1f}%)")
     print(f"Files converted:     {statistics['files_converted']}")
     print(f"Playlists created:   {statistics['playlists_created']}")
+    
+    if 'complete_series' in statistics:
+        print(f"Complete series:     {statistics['complete_series']}")
+    if 'incomplete_series' in statistics:
+        print(f"Incomplete series:   {statistics['incomplete_series']}")
+        
     print(f"Total time:          {elapsed_time}")
     print("="*60)
     
@@ -302,10 +340,10 @@ def main():
     
     try:
         # Get user input
-        source_dir, dest_dir, keep_files, max_workers = prompt_user_input(args)
+        source_dir, dest_dir, keep_files, max_workers, state_file, skip_playlist_scan = prompt_user_input(args)
         
         # Process files
-        statistics = batch_process(source_dir, dest_dir, keep_files, max_workers)
+        statistics = batch_process(source_dir, dest_dir, keep_files, max_workers, state_file, skip_playlist_scan)
         
         # Display summary
         display_summary(statistics)

@@ -1,5 +1,7 @@
 ﻿# 7z-to-CHD Converter
 
+Version 1.0.1
+
 A cross-platform utility for bulk extraction of .7z archives and conversion to CHD format, with automatic handling for multi-disk games.
 
 This tool was created out of frustration with existing conversion utilities that either imposed overly strict requirements or lacked efficient batch processing capabilities. Our goal was to develop a powerful yet simple solution that eliminates common pain points in the ROM conversion workflow.
@@ -148,6 +150,21 @@ While primarily tested with Dreamcast games, this tool should work with disc ima
 - Other CD-based systems
 
 The tool detects and handles various disc image formats including ISO, BIN/CUE, GDI, NRG, CDI, and more.
+
+## Version History
+
+- 1.0.1 - Fixed playlist generation for games with more than two discs
+- 1.0.0 - Initial release
+
+## Acknowledgments
+
+This project uses or references code and concepts from the following open-source projects:
+
+- [MAME Project](https://github.com/mamedev/mame) - For the chdman utility that provides CHD compression functionality
+- [py7zr](https://github.com/miurahr/py7zr) - Python library for 7z archive handling
+- [tqdm](https://github.com/tqdm/tqdm) - For progress bar functionality
+- [colorama](https://github.com/tartley/colorama) - For cross-platform colored terminal output
+- [psutil](https://github.com/giampaolo/psutil) - For system resource monitoring
 
 ## License
 
