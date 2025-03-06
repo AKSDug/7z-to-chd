@@ -2,6 +2,7 @@
 """
 7z-to-CHD Converter - Setup Script
 Cross-platform utility for extraction of .7z archives and conversion to CHD format
+Version 1.0.2
 
 Author: AKSDug
 Repository: https://github.com/AKSDug/7z-to-chd

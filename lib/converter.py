@@ -3,6 +3,7 @@
 7z-to-CHD Converter - Enhanced Converter Module
 Handles the conversion of disc image files to CHD format with improved
 parallelism and resource management
+Version 1.0.2
 
 Author: AKSDug
 Repository: https://github.com/AKSDug/7z-to-chd

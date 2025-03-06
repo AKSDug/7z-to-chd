@@ -2,6 +2,7 @@
 """
 7z-to-CHD Converter - Utilities Module
 Common utility functions
+Version 1.0.2
 
 Author: AKSDug
 Repository: https://github.com/AKSDug/7z-to-chd

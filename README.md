@@ -1,6 +1,6 @@
 ﻿# 7z-to-CHD Converter
 
-Version 1.0.1
+Version 1.0.2
 
 A cross-platform utility for bulk extraction of .7z archives and conversion to CHD format, with automatic handling for multi-disk games.
 
@@ -153,6 +153,7 @@ The tool detects and handles various disc image formats including ISO, BIN/CUE, 
 
 ## Version History
 
+- 1.0.2 - Fixed playlist updates for games with more than two discs
 - 1.0.1 - Fixed playlist generation for games with more than two discs
 - 1.0.0 - Initial release
 
