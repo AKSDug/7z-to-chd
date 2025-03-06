@@ -2,6 +2,7 @@
 """
 7z-to-CHD Converter - Main Script
 Batch processing of .7z archives to CHD format
+Version 1.0.2
 
 Author: AKSDug
 Repository: https://github.com/AKSDug/7z-to-chd
