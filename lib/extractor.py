@@ -3,6 +3,7 @@
 7z-to-CHD Converter - Enhanced Extractor Module
 Handles the extraction of .7z archives with adaptive resource management
 and resume functionality
+Version 1.0.2
 
 Author: AKSDug
 Repository: https://github.com/AKSDug/7z-to-chd

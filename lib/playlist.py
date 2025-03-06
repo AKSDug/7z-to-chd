@@ -397,6 +397,14 @@ class PlaylistManager:
             logger.debug(f"CHD file {chd_path.name} does not appear to be part of a multi-disc series")
             return None
         
+        # Check if this is a new disc that wasn't in the game series before
+        is_new_disc = True
+        if base_game in self.game_series:
+            for existing_path, existing_num in self.game_series[base_game]:
+                if existing_num == disc_num:
+                    is_new_disc = False
+                    break
+        
         # Add to game series tracking
         self._add_to_game_series(base_game, chd_path, disc_num)
         
@@ -404,15 +412,20 @@ class PlaylistManager:
         self._find_related_discs(base_game)
         
         # Check if we should update the playlist
-        # Only update if we have multiple discs AND we have all expected discs
+        # Only update if we have multiple discs AND either it's a new disc or we're forcing update
         if update_playlists and len(self.game_series[base_game]) > 1:
-            # Check if we have a complete series (all disc numbers from 1 to max)
-            disc_numbers = [d for _, d in self.game_series[base_game]]
-            max_disc = max(disc_numbers)
-            is_complete = all(i in disc_numbers for i in range(1, max_disc + 1))
-            
-            # Only update playlist if the series is complete or we are adding the final disc
-            if is_complete or disc_num == max_disc:
+            # A new disc always forces a playlist update
+            if is_new_disc:
+                # Remove from recently updated to force an update
+                if base_game in self.recently_updated:
+                    self.recently_updated.remove(base_game)
+                
+                # Reset the signature to force detection of changes
+                if base_game in self.series_signatures:
+                    del self.series_signatures[base_game]
+                
+                # Get disc numbers for logging
+                disc_numbers = [d for _, d in self.game_series[base_game]]
                 logger.info(f"Creating/updating playlist for {base_game} - series appears complete with {len(disc_numbers)} discs")
                 self.update_playlist(base_game)
         
@@ -566,23 +579,46 @@ class PlaylistManager:
         clean_name = self._clean_filename(base_game)
         m3u_path = self.output_dir / f"{clean_name}.m3u"
         
-        # If the playlist already exists, check if it needs updating
-        if m3u_path.exists() and not self._has_series_changed(base_game):
-            logger.debug(f"Skipping playlist update for {base_game} - no changes detected")
-            return m3u_path
+        # Perform the update regardless if the series has more than 2 discs
+        # to ensure all discs are included in the playlist
+        is_update_needed = True
         
-        # If this playlist exists and is user-customized, check for new discs only
-        if m3u_path.exists() and clean_name in self.user_customized:
-            result = self._update_user_customized_playlist(base_game, m3u_path)
+        # If we already have a playlist, check if we need to update
+        if m3u_path.exists():
+            # Read the current playlist to check if all discs are included
+            existing_entries = self._read_m3u_file(m3u_path)
+            existing_discs = set()
+            
+            # Check existing entries to determine if they match our known discs
+            for entry in existing_entries:
+                entry_path = Path(entry)
+                _, disc_num = self._extract_base_name_and_disc(entry_path.stem)
+                if disc_num:
+                    existing_discs.add(disc_num)
+            
+            # Get current discs from series data
+            current_discs = {disc_num for _, disc_num in self.game_series[base_game]}
+            
+            # If current discs match existing discs and we haven't just added a new disc
+            if current_discs == existing_discs and base_game in self.recently_updated:
+                logger.debug(f"Skipping playlist update for {base_game} - all {len(current_discs)} discs already included")
+                is_update_needed = False
+        
+        if is_update_needed:
+            # If this playlist exists and is user-customized, check for new discs only
+            if m3u_path.exists() and clean_name in self.user_customized:
+                result = self._update_user_customized_playlist(base_game, m3u_path)
+            else:
+                # Create or fully update the playlist
+                result = self._create_standard_playlist(base_game, m3u_path)
+                
+            # Mark as recently updated to prevent redundant updates
+            if result:
+                self.recently_updated.add(base_game)
+                
+            return result
         else:
-            # Create or fully update the playlist
-            result = self._create_standard_playlist(base_game, m3u_path)
-            
-        # Mark as recently updated to prevent redundant updates
-        if result:
-            self.recently_updated.add(base_game)
-            
-        return result
+            return m3u_path
     
     def _update_user_customized_playlist(self, base_game: str, m3u_path: Path) -> Path:
         """
