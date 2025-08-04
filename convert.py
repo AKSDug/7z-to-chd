@@ -106,9 +106,13 @@ def prompt_user_input(args):
     if args.keep:
         keep_files = args.keep == "yes"
     else:
-        print("\nKeep original files after conversion? (yes/no):")
+        print("\nKeep original files after conversion? (yes/no) [default: yes]:")
         keep_input = input("> ").strip().lower()
-        keep_files = keep_input in ["yes", "y", "true", "1"]
+        # Default to True (keep files) if empty input, only delete if explicitly requested
+        if keep_input == "":
+            keep_files = True  # Default to keeping files (non-destructive)
+        else:
+            keep_files = keep_input in ["yes", "y", "true", "1"]
 
     keep_str = "Yes" if keep_files else "No"
     print(f"{colorama.Fore.GREEN}✓ Keep original files: {keep_str}{colorama.Style.RESET_ALL}")
