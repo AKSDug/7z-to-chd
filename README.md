@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](#) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
 
 > **⚠️ IMPORTANT: USE AT YOUR OWN RISK**  
-> This tool modifies and potentially deletes files during the conversion process. **Always backup your original files before conversion.** The tool can delete source .7z files if configured to do so, and CHD conversion is irreversible without the original disc images. Test thoroughly with non-critical files first.
+> This tool has been tested with various disc image formats and archive types. **Default settings preserve original files** (non-destructive mode), but you can configure it to delete source .7z files after conversion. CHD conversion is irreversible, so **always backup your original files before first use.** We recommend starting with the default non-destructive settings.
 
 A cross-platform utility for bulk extraction of .7z archives and conversion to CHD format, with automatic handling for multi-disk games.
 
@@ -113,7 +113,7 @@ python3 convert.py
 The script will prompt you for:
 1. Source directory (containing .7z files)
 2. Destination directory (for CHD and .m3u files)
-3. Whether to keep or delete original files
+3. Whether to keep or delete original files (default: keep files - recommended)
 4. Multithreading limitations
 
 If chdman wasn't found during setup, you'll be prompted to provide its path the first time you run a conversion.
@@ -221,7 +221,8 @@ This project uses or references code and concepts from the following open-source
 ## Security & Privacy
 
 - **File Operations**: This tool reads, extracts, and converts files - ensure you trust the source of your .7z archives
-- **Deletion Warning**: Can delete original .7z files if configured - this action is irreversible
+- **Default Safety**: Default settings preserve original files (non-destructive mode recommended)
+- **Optional Deletion**: Can delete original .7z files only if explicitly configured - this action is irreversible
 - **Resource Usage**: Multi-threading can consume significant CPU and disk I/O
 - **Dependencies**: Requires external chdman tool with executable permissions
 
