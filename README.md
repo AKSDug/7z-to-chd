@@ -1,6 +1,9 @@
-﻿# 7z-to-CHD Converter
+# 7z-to-CHD Converter
 
-Version 1.0.2
+[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](#) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
+
+> **⚠️ IMPORTANT: USE AT YOUR OWN RISK**  
+> This tool modifies and potentially deletes files during the conversion process. **Always backup your original files before conversion.** The tool can delete source .7z files if configured to do so, and CHD conversion is irreversible without the original disc images. Test thoroughly with non-critical files first.
 
 A cross-platform utility for bulk extraction of .7z archives and conversion to CHD format, with automatic handling for multi-disk games.
 
@@ -44,6 +47,12 @@ This tool was created out of frustration with existing conversion utilities that
 
 ## Installation
 
+### Prerequisites
+- Python 3.7 or higher
+- MAME with chdman utility ([download here](https://www.mamedev.org/release.html))
+- Internet connection (for initial setup)
+
+### Method 1: Quick Setup (Recommended)
 Run the setup script to install all dependencies:
 
 ```bash
@@ -52,6 +61,19 @@ python setup.py
 
 # macOS/Linux
 python3 setup.py
+```
+
+### Method 2: Manual Installation
+```bash
+# Create virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Or install development dependencies
+pip install -e ".[dev]"
 ```
 
 The setup script will:
@@ -151,6 +173,35 @@ While primarily tested with Dreamcast games, this tool should work with disc ima
 
 The tool detects and handles various disc image formats including ISO, BIN/CUE, GDI, NRG, CDI, and more.
 
+## Development
+
+### Code Quality Tools
+```bash
+# Format code
+black .
+
+# Lint code
+flake8 .
+
+# Type checking
+mypy .
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=lib
+```
+
+### Contributing
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes with proper formatting and tests
+4. Run quality checks: `black .`, `flake8 .`, `pytest`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
 ## Version History
 
 - 1.0.2 - Fixed playlist updates for games with more than two discs
@@ -167,10 +218,33 @@ This project uses or references code and concepts from the following open-source
 - [colorama](https://github.com/tartley/colorama) - For cross-platform colored terminal output
 - [psutil](https://github.com/giampaolo/psutil) - For system resource monitoring
 
+## Security & Privacy
+
+- **File Operations**: This tool reads, extracts, and converts files - ensure you trust the source of your .7z archives
+- **Deletion Warning**: Can delete original .7z files if configured - this action is irreversible
+- **Resource Usage**: Multi-threading can consume significant CPU and disk I/O
+- **Dependencies**: Requires external chdman tool with executable permissions
+
 ## License
 
-MIT
+This project is licensed under the **MIT License** - see [LICENSE](LICENSE) for details.
+
+### MIT License Summary
+- ✅ **Commercial Use**: Free for all commercial projects
+- ✅ **Modification**: Modify and distribute changes
+- ✅ **Distribution**: Share with others freely
+- ✅ **Private Use**: Use privately without restrictions
+- ❗ **Liability**: No warranty - use at your own risk
+- ❗ **Attribution**: Must include original license and copyright
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/AKSDug/7z-to-chd/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/AKSDug/7z-to-chd/discussions)
+- **Repository**: [GitHub Repository](https://github.com/AKSDug/7z-to-chd)
 
 ## Author
 
-Created by AKSDug
+Created by **AKSDug**
+- GitHub: [@AKSDug](https://github.com/AKSDug)
+- Email: aksdug@proton.me
