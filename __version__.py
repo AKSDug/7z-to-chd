@@ -1,6 +1,6 @@
 """Version information for 7z-to-chd converter."""
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "AKSDug"
 __email__ = "aksdug@proton.me"
 __description__ = (

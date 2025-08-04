@@ -35,5 +35,5 @@ def test_author_info():
 
 
 def test_current_version():
-    """Test current version is 1.0.2."""
-    assert __version__ == "1.0.2"
+    """Test current version is 1.0.3."""
+    assert __version__ == "1.0.3"

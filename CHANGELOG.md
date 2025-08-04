@@ -7,19 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2025-01-01
+
+### Changed
+- **BREAKING**: Default behavior now preserves original files (non-destructive by default)
+- Empty input when prompted now defaults to keeping files instead of deleting them
+- User must explicitly choose "no" to delete original files
+- Updated prompt to show "[default: yes]" for clarity
+
 ### Added
 - Development tooling (black, flake8, mypy, pytest)
 - Modern pyproject.toml configuration
 - Centralized version management
-- Risk disclaimer in README
-- Enhanced installation instructions
+- Risk disclaimer in README emphasizing tested safety
+- Enhanced installation instructions with virtual environment support
 - Security and privacy documentation
 - Code quality tools and pre-commit hooks
+- GitHub Actions CI pipeline for cross-platform testing
+- Comprehensive test suite with 17+ tests
 
-### Changed
-- Improved README with badges and better structure
-- Enhanced documentation sections
-- Better .gitignore for Python projects
+### Fixed
+- Critical safety issue where default behavior was destructive
+- Misalignment between README claims and actual code behavior
+- Code formatting and style consistency across project
+
+### Improved
+- README with badges and professional structure
+- Documentation clarity around safety and default settings
+- Installation methods (manual, virtual env, development)
 
 ## [1.0.2] - 2024-XX-XX
 
@@ -52,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Efficient resume functionality
 - Comprehensive error handling and logging
 
-[Unreleased]: https://github.com/AKSDug/7z-to-chd/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/AKSDug/7z-to-chd/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/AKSDug/7z-to-chd/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/AKSDug/7z-to-chd/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/AKSDug/7z-to-chd/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/AKSDug/7z-to-chd/releases/tag/v1.0.0

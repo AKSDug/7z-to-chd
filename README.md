@@ -1,6 +1,6 @@
 # 7z-to-CHD Converter
 
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](#) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](#) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Python](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
 
 > **⚠️ IMPORTANT: USE AT YOUR OWN RISK**  
 > This tool has been tested with various disc image formats and archive types. **Default settings preserve original files** (non-destructive mode), but you can configure it to delete source .7z files after conversion. CHD conversion is irreversible, so **always backup your original files before first use.** We recommend starting with the default non-destructive settings.
